@@ -2,6 +2,7 @@ import datetime
 
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 # You can find an example class diagram for the Model at
 # http://yuml.me/edit/53759046
@@ -27,3 +28,18 @@ class Choice(models.Model):
     votes = models.IntegerField(default=0)
     def __unicode__(self):
         return self.choice_text
+
+class Pollster(models.Model):
+    user = models.OneToOneField(User)
+    birthday = models.DateTimeField("Birthday", blank=False, null=False) 
+    
+    def __init__(self,birthday):     
+        self.birthday = birthday
+        now = timezone.now()
+        if now <= birthday:
+            raise ValueError('birthday is in the future')
+        if birthday <= now - datetime.timedelta(weeks= (200 * 52)):
+            raise ValueError('this person is probably dead')
+
+    def __unicode__(self):
+        return self.user.username

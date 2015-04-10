@@ -2,7 +2,7 @@ import datetime
 
 from django.utils import timezone
 from django.test import TestCase
-from polls.models import Question
+from polls.models import Question, Pollster
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
@@ -115,12 +115,12 @@ class QuestionIndexDetailTests(TestCase):
         past_question = create_question(question_text='Past Question.', days=-5)
         response = self.client.get(reverse('polls:detail', args=(past_question.id,)))
         self.assertContains(response, past_question.question_text, status_code=200)
-		
+
 class QuestionResultsTests(TestCase):
     def test_results_view_without_login(self):
         """
         The results view of a question should redirect (302) to the login page if the user is not
-		logged in.
+        logged in.
         """
         question = create_question(question_text='Not logged in', days=-1)
         response = self.client.get(reverse('polls:results',args=(question.id,)))
@@ -129,10 +129,29 @@ class QuestionResultsTests(TestCase):
     def test_detail_view_with_login(self):
         """
         The results view of a question should return the results if the user is
-		logged in.
+        logged in.
         """
         User.objects.create_superuser('fred', 'fred@fred.fred', 'secret')
         self.client.login(username='fred',password='secret')
         question = create_question(question_text='Loged in', days=-1)
         response = self.client.get(reverse('polls:results',args=(question.id,)))
-        self.assertContains(response, 'Loged in',status_code=200)	
+        self.assertContains(response, 'Loged in',status_code=200)
+ 
+class PollsterModelTests(TestCase):
+    def test_can_not_create_with_future_birthday(self):
+        """
+        Can not create a Pollster with a birthday in the future.
+        """
+        birthday = timezone.now() + datetime.timedelta(days=30)
+        with self.assertRaises(ValueError):
+            pollster = Pollster(birthday)
+
+    def test_can_not_create_dead_people(self):
+        """
+        Can not create a Pollster that is to far in the past
+        """
+        birthday = timezone.now() - datetime.timedelta(weeks = (200*52))
+        with self.assertRaises(ValueError):
+            pollster = Pollster(birthday)
+        
+

@@ -1,5 +1,6 @@
+# See: https://docs.djangoproject.com/en/1.7/ref/contrib/admin/
 from django.contrib import admin
-from polls.models import Choice, Question
+from polls.models import Choice, Question, Pollster
 
 
 class ChoiceInline(admin.TabularInline):
@@ -16,5 +17,8 @@ class QuestionAdmin(admin.ModelAdmin):
     list_display = ('question_text', 'pub_date', 'was_published_recently')
     list_filter = ['pub_date']
     search_fields = ['question_text']
-	
+
 admin.site.register(Question, QuestionAdmin)
+
+admin.site.register(Pollster)
+
