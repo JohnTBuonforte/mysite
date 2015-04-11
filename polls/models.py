@@ -1,4 +1,5 @@
 import datetime
+import validators
 
 from django.db import models
 from django.utils import timezone
@@ -31,15 +32,7 @@ class Choice(models.Model):
 
 class Pollster(models.Model):
     user = models.OneToOneField(User)
-    birthday = models.DateTimeField("Birthday", blank=False, null=False) 
-    
-    def __init__(self,birthday):     
-        self.birthday = birthday
-        now = timezone.now()
-        if now <= birthday:
-            raise ValueError('birthday is in the future')
-        if birthday <= now - datetime.timedelta(weeks= (200 * 52)):
-            raise ValueError('this person is probably dead')
+    birthday = models.DateTimeField("Birthday", blank=False, null=False,validators=[validators.not_dead,validators.not_future])
 
     def __unicode__(self):
         return self.user.username

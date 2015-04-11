@@ -1,10 +1,11 @@
 import datetime
-
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.test import TestCase
 from polls.models import Question, Pollster
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+import validators
 
 class QuestionMethodTests(TestCase):
 
@@ -137,21 +138,20 @@ class QuestionResultsTests(TestCase):
         response = self.client.get(reverse('polls:results',args=(question.id,)))
         self.assertContains(response, 'Loged in',status_code=200)
  
-class PollsterModelTests(TestCase):
-    def test_can_not_create_with_future_birthday(self):
-        """
-        Can not create a Pollster with a birthday in the future.
-        """
-        birthday = timezone.now() + datetime.timedelta(days=30)
-        with self.assertRaises(ValueError):
-            pollster = Pollster(birthday)
-
-    def test_can_not_create_dead_people(self):
-        """
-        Can not create a Pollster that is to far in the past
-        """
-        birthday = timezone.now() - datetime.timedelta(weeks = (200*52))
-        with self.assertRaises(ValueError):
-            pollster = Pollster(birthday)
         
-
+class ValidatorTests(TestCase):
+    def test_not_dead(self):
+        """
+        value is not to far in the past
+        """
+        value = timezone.now() - datetime.timedelta(weeks = (200*52))
+        with self.assertRaises(ValidationError):
+            validators.not_dead(value)
+        
+    def test_not_future(self):
+        """Raise a ValidationError if the value is in the future.
+        """
+        value = timezone.now() + datetime.timedelta(days=30)
+        with self.assertRaises(ValidationError):
+            validators.not_future(value)
+        
